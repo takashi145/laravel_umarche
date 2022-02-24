@@ -17,7 +17,7 @@ class CartController extends Controller
         $totalPrice = 0;
 
         foreach($products as $product){
-            $totalPrice = $product->price * $product->pivot->quantity;
+            $totalPrice += $product->price * $product->pivot->quantity;
         }
         return view('user.cart', compact('products', 'totalPrice'));
     }
@@ -60,7 +60,7 @@ class CartController extends Controller
                 $lineItem = [
                     'name' => $product->name,
                     'description' => $product->information,
-                    'amound' => $product->price,
+                    'amount' => $product->price,
                     'currency' => 'jpy',
                     'quantity' => $product->pivot->quantity,
                 ];
@@ -74,18 +74,17 @@ class CartController extends Controller
                 'quantity' => $product->pivot->quantity * -1,
             ]);
         }
-        dd('test');
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card'],
             'line_items' => [$lineItems],
             'mode' => 'payment',
             'success_url' => route('user.items.index'),
-            'cancel_url' => route('user.card.index'),
+            'cancel_url' => route('user.cart.index'),
         ]);
 
         $publicKey = env('STRIPE_PUBLIC_KEY');
 
-        return view('usr.checkout', compact('session', 'publicKey'));
+        return view('user.checkout', compact('session', 'publicKey'));
     }
 }
